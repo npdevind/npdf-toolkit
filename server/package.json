@@ -1,0 +1,24 @@
+{
+  "name": "npdf_server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "dev": "nodemon app.js"
+  },
+  "type": "module",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "buffer": "^6.0.3",
+    "child_process": "^1.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "fs": "^0.0.1-security",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "pdf-lib": "^1.17.1"
+  }
+}

@@ -1,33 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { FileText } from "lucide-react";
+import { Spinner } from "../ui/spinner";
 
-const FileUpload = ({ buttonName = "Upload" }) => {
+const FileUpload = ({
+  buttonName = "Upload",
+  onFileSelect,
+  handleFileAction,
+  isPending = false,
+}) => {
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState("");
+  // store the actual file
+  const fileInputRef = useRef(null);
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
+  const handleFile = (file) => {
+    setFileName(file.name);
+    if (onFileSelect) onFileSelect(file); // send file to parent
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) setFileName(file.name);
+    const droppedFile = e.dataTransfer.files[0];
+    if (droppedFile) handleFile(droppedFile);
   };
 
   const handleFileSelect = (e) => {
-    const file = e.target.files[0];
-    if (file) setFileName(file.name);
+    const selectedFile = e.target.files[0];
+    if (selectedFile) handleFile(selectedFile);
   };
 
-  const handleRemove = () => setFileName("");
+  const handleRemove = () => {
+    setFileName("");
+    if (fileInputRef.current) fileInputRef.current.value = null;
+    if (onFileSelect) onFileSelect(null); // notify parent removal
+  };
 
   return (
     <div className="flex flex-col items-center justify-center space-y-6 w-full max-w-md mx-auto">
@@ -39,10 +46,16 @@ const FileUpload = ({ buttonName = "Upload" }) => {
             ? "border-sky-500 bg-sky-50 shadow-md"
             : "border-gray-300 bg-white hover:border-sky-400"
         }`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          setIsDragging(false);
+        }}
         onDrop={handleDrop}
-        onClick={() => document.getElementById("fileInput").click()} // trigger hidden input
+        onClick={() => fileInputRef.current.click()}
       >
         <FileText className="mb-4 h-14 w-14 text-sky-500" />
         {!fileName ? (
@@ -55,30 +68,38 @@ const FileUpload = ({ buttonName = "Upload" }) => {
         ) : (
           <span className="text-gray-800 font-semibold">{fileName}</span>
         )}
-        {/* Hidden input */}
+
         <input
           id="fileInput"
           type="file"
           className="hidden"
+          ref={fileInputRef}
           onChange={handleFileSelect}
         />
       </div>
 
-      {/* Action Buttons */}
-      {fileName && (
-        <div className="flex flex-wrap gap-4 justify-center">
-          <button className="flex-1   rounded-lg  bg-sky-600 px-6 py-3 text-white font-medium shadow hover:bg-sky-700 transition-colors duration-300 cursor-pointer">
-            {buttonName}
-          </button>
+      {fileName &&
+        (isPending ? (
+          <Spinner className="size-15 text-sky-900" />
+        ) : (
+          <div className="flex flex-wrap gap-4 justify-center">
+            <button
+              className="flex-1 rounded-lg bg-sky-600 px-6 py-3 text-white font-medium shadow hover:bg-sky-700 transition-colors duration-300 cursor-pointer"
+              onClick={() => handleFileAction()}
+              disabled={isPending}
+            >
+              {buttonName}
+            </button>
 
-          <button
-            className="flex-1  rounded-lg bg-red-600 px-6 py-3 text-white font-medium shadow hover:bg-red-500 transition-colors duration-300 cursor-pointer"
-            onClick={handleRemove}
-          >
-            Remove
-          </button>
-        </div>
-      )}
+            <button
+              className="flex-1 rounded-lg bg-red-600 px-6 py-3 text-white font-medium shadow hover:bg-red-500 transition-colors duration-300 cursor-pointer"
+              onClick={handleRemove}
+              disabled={isPending}
+            >
+              Remove
+            </button>
+          </div>
+        ))}
     </div>
   );
 };

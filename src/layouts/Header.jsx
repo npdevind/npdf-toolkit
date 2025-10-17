@@ -3,11 +3,19 @@ import NavBar from "./NavBar";
 import logo from "../assets/logo.png";
 import { Link, useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@radix-ui/react-dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { googleLogout } from "@react-oauth/google";
 
 const Header = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("googleUser"));
-  console.log(user.picture);
 
   return (
     <>
@@ -43,13 +51,32 @@ const Header = () => {
           {/* Auth Buttons */}
           {user ? (
             <>
-              <Avatar>
-                <img
-                  src={user.picture}
-                  alt=""
-                  className="rounded-full w-9 h-9"
-                />
-              </Avatar>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Avatar>
+                    <img
+                      src={user?.picture}
+                      alt="user"
+                      className="rounded-full w-9 "
+                    />
+                  </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="bg-sky-900 p-2  text-white w-40 mt-4 shadow-2xl"
+                  align="end"
+                >
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={() => {
+                      googleLogout();
+                      localStorage.removeItem("googleUser");
+                      navigate("/");
+                    }}
+                  >
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <div className="hidden lg:flex lg:items-center lg:gap-4">

@@ -1,8 +1,36 @@
 import FileUpload from "@/components/pages/FileUpload";
 import Header from "@/layouts/Header";
-import React from "react";
+import { noAuthUpdater } from "@/utils";
+import { useMutation } from "@tanstack/react-query";
+import React, { useState } from "react";
 
 const CompressPDF = () => {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [compressedPDF, setCompressedPDF] = useState(null);
+
+  const { mutate, isPending, status } = useMutation({
+    mutationFn: ({ body, method, url }) =>
+      noAuthUpdater({ url, method, body, responseType: "arraybuffer" }),
+    onSuccess: (data) => {
+      const blob = new Blob([data], { type: "application/pdf" });
+      setCompressedPDF(blob); // store blob for download
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  const handleCompress = () => {
+    if (!selectedFile) return alert("Select a PDF first!");
+    mutate({
+      url: "/compress-pdf",
+      method: "POST",
+      body: { pdf: selectedFile },
+    });
+  };
+
+  console.log(status);
+
   return (
     <>
       <Header />
@@ -14,9 +42,32 @@ const CompressPDF = () => {
           Reduce file size while optimizing for maximal PDF quality.
         </span>
 
-        <div>
-          <FileUpload buttonName={"Compress"} />
-        </div>
+        {status != "success" && (
+          <FileUpload
+            buttonName={"Compress"}
+            onFileSelect={setSelectedFile}
+            handleFileAction={handleCompress}
+            isPending={isPending}
+            status={status}
+          />
+        )}
+        {compressedPDF && (
+          <button
+            onClick={() => {
+              const url = window.URL.createObjectURL(compressedPDF);
+              const link = document.createElement("a");
+              link.href = url;
+              link.setAttribute("download", "compressed.pdf");
+              document.body.appendChild(link);
+              link.click();
+              link.remove();
+              window.URL.revokeObjectURL(url);
+            }}
+            className="mt-4 rounded-lg bg-green-600 px-6 py-3 text-white font-medium shadow hover:bg-green-700 transition-colors duration-300 cursor-pointer"
+          >
+            Download Compressed PDF
+          </button>
+        )}
       </div>
     </>
   );
