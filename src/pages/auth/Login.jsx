@@ -12,8 +12,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import video from "../../assets/login_v.mp4";
+// import googleLogo from "../../assets/images/google_logo.jpg";
+import { GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
+  const navigate = useNavigate();
+  const handleLoginSuccess = (credentialResponse) => {
+    const token = credentialResponse.credential;
+    const user = jwtDecode(token); // decode JWT to get user info
+    // console.log("User Info:", user);
+    localStorage.setItem("googleUser", JSON.stringify(user));
+    // Save user info to localStorage or call your backend for further auth
+    navigate("/");
+  };
+
+  const handleLoginError = () => {
+    console.log("Login Failed");
+  };
   return (
     <>
       <div className="flex flex-col lg:flex-row w-screen h-screen">
@@ -71,9 +88,15 @@ const Login = () => {
               >
                 Login
               </Button>
-              <Button variant="outline" className="w-full">
+              <GoogleLogin
+                onSuccess={handleLoginSuccess}
+                onError={handleLoginError}
+              />
+              {/* <Button variant="outline" className="w-full">
+                <img src={googleLogo} alt="google_logo" className="w-5 h-5" />{" "}
                 Login with Google
-              </Button>
+                
+              </Button> */}
             </CardFooter>
           </Card>
         </div>

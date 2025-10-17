@@ -2,9 +2,13 @@ import React from "react";
 import NavBar from "./NavBar";
 import logo from "../assets/logo.png";
 import { Link, useNavigate } from "react-router-dom";
+import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 
 const Header = () => {
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("googleUser"));
+  console.log(user.picture);
+
   return (
     <>
       <header className="backdrop-blur-sm bg-white/80 shadow-md sticky top-0 z-50">
@@ -37,20 +41,32 @@ const Header = () => {
           </div>
 
           {/* Auth Buttons */}
-          <div className="hidden lg:flex lg:items-center lg:gap-4">
-            <Link
-              to="/login"
-              className="px-3 py-1 font-semibold text-black rounded hover:text-sky-900 transition-colors"
-            >
-              Log in
-            </Link>
-            <Link
-              to="#"
-              className="px-3 py-1 font-semibold text-white bg-sky-900 rounded hover:bg-sky-700 transition-colors"
-            >
-              Sign Up
-            </Link>
-          </div>
+          {user ? (
+            <>
+              <Avatar>
+                <img
+                  src={user.picture}
+                  alt=""
+                  className="rounded-full w-9 h-9"
+                />
+              </Avatar>
+            </>
+          ) : (
+            <div className="hidden lg:flex lg:items-center lg:gap-4">
+              <Link
+                to="/login"
+                className="px-3 py-1 font-semibold text-black rounded hover:text-sky-900 transition-colors"
+              >
+                Log in
+              </Link>
+              <Link
+                to="#"
+                className="px-3 py-1 font-semibold text-white bg-sky-900 rounded hover:bg-sky-700 transition-colors"
+              >
+                Sign Up
+              </Link>
+            </div>
+          )}
         </nav>
       </header>
     </>
