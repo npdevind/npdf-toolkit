@@ -15,6 +15,7 @@ export const compressFunction = async (req, res) => {
     // res.setHeader("Content-Disposition", "attachment; filename=compressed.pdf");
     // res.setHeader("Content-Type", "application/pdf");
     // res.send(Buffer.from(pdfBytes));
+    //! better compression using ghostscript
 
     const inputPath = req.file.path;
     const outputPath = path.join("uploads", `compressed-${Date.now()}.pdf`);

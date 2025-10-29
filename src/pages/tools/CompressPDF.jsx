@@ -2,6 +2,7 @@ import FileUpload from "@/components/pages/FileUpload";
 import Header from "@/layouts/Header";
 import { noAuthUpdater } from "@/utils";
 import { useMutation } from "@tanstack/react-query";
+import { Download, RefreshCcwDot } from "lucide-react";
 import React, { useState } from "react";
 
 const CompressPDF = () => {
@@ -29,8 +30,6 @@ const CompressPDF = () => {
     });
   };
 
-  console.log(status);
-
   return (
     <>
       <Header />
@@ -42,7 +41,7 @@ const CompressPDF = () => {
           Reduce file size while optimizing for maximal PDF quality.
         </span>
 
-        {status != "success" && (
+        {(status != "success" || !compressedPDF) && (
           <FileUpload
             buttonName={"Compress"}
             onFileSelect={setSelectedFile}
@@ -52,21 +51,29 @@ const CompressPDF = () => {
           />
         )}
         {compressedPDF && (
-          <button
-            onClick={() => {
-              const url = window.URL.createObjectURL(compressedPDF);
-              const link = document.createElement("a");
-              link.href = url;
-              link.setAttribute("download", "compressed.pdf");
-              document.body.appendChild(link);
-              link.click();
-              link.remove();
-              window.URL.revokeObjectURL(url);
-            }}
-            className="mt-4 rounded-lg bg-green-600 px-6 py-3 text-white font-medium shadow hover:bg-green-700 transition-colors duration-300 cursor-pointer"
-          >
-            Download Compressed PDF
-          </button>
+          <>
+            <button
+              onClick={() => {
+                const url = window.URL.createObjectURL(compressedPDF);
+                const link = document.createElement("a");
+                link.href = url;
+                link.setAttribute("download", "compressed.pdf");
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url);
+              }}
+              className="mt-4 flex gap-2 rounded-lg bg-green-600 px-6 py-3 text-white font-medium shadow hover:bg-green-700 transition-colors duration-300 cursor-pointer"
+            >
+              <Download /> Download Compressed PDF
+            </button>
+            <button
+              className="rounded-lg flex gap-2 bg-yellow-400 px-6 py-3 text-gray-700 font-medium shadow hover:bg-yellow-500  transition-colors duration-300 cursor-pointer"
+              onClick={() => setCompressedPDF(null)}
+            >
+              <RefreshCcwDot /> Upload Another PDF
+            </button>
+          </>
         )}
       </div>
     </>

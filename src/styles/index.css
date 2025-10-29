@@ -123,3 +123,8 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.rpv-core__viewer {
+  width: 100% !important;
+  height: auto !important;
+}

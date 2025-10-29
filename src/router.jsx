@@ -3,6 +3,7 @@ import MainLayout from "./layouts/MainLayout";
 import Index from "./pages/Index";
 import CompressPDF from "./pages/tools/CompressPDF";
 import Login from "./pages/auth/Login";
+import EditPDF from "./pages/tools/EditPDF";
 
 const router = createBrowserRouter([
   {
@@ -12,6 +13,11 @@ const router = createBrowserRouter([
   {
     path: "/compress",
     element: <CompressPDF />,
+  },
+
+  {
+    path: "/edit",
+    element: <EditPDF />,
   },
 
   {

@@ -58,7 +58,7 @@ const PDFToolData = [
     subtitle:
       "Add text, images, shapes or freehand annotations to a PDF document. Edit the size, font, and color of the added content.",
     icon: SquarePen,
-    link: "#edit",
+    link: "edit",
     type: "edit-pdf",
   },
 ];
