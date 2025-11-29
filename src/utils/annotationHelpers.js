@@ -1,19 +1,13 @@
-export const createTextAnnotation = (
-  text,
-  pdfWidth,
-  pdfHeight,
-  scrollX = 0,
-  scrollY = 0
-) => {
-  const centerX = scrollX + pdfWidth / 2 - 50;
-  const centerY = scrollY + pdfHeight / 2 - 20;
-
+export const createTextAnnotation = (text, x, y) => {
   return {
     id: Date.now(),
     text,
-    x: centerX,
-    y: centerY,
-    fontSize: 14,
+    x,
+    y,
+    fontSize: 16,
+    fontFamily: "Arial",
+    fontWeight: "normal",
+    fontStyle: "normal",
     color: "#000000",
   };
 };

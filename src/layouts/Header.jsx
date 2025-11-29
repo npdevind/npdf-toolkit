@@ -7,96 +7,95 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { googleLogout } from "@react-oauth/google";
+import { Button } from "@/components/ui/button";
 
 const Header = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("googleUser"));
 
   return (
-    <>
-      <header className="backdrop-blur-sm bg-white/80 shadow-md sticky top-0 z-50">
-        <nav className="flex items-center justify-between py-1  lg:px-8">
-          {/* Logo & App Name */}
-          <div
-            className="flex items-center gap-3 cursor-pointer"
-            onClick={() => navigate("/")}
-          >
-            <img src={logo} alt="Company Logo" className="h-12 w-auto" />
-            <div className="flex flex-col leading-tight">
-              <span className="text-black font-semibold text-lg hover:text-sky-600 transition-colors">
-                NPDF TOOLKIT
-              </span>
-              <span
-                className="text-blue-400 text-sm underline hover:text-blue-600 transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation(); // prevent navigating home
-                  window.open("https://github.com/npdevind", "_blank");
-                }}
-              >
-                BY NPDEV
-              </span>
-            </div>
+    <header className="sticky top-0 z-50 w-full glass border-b border-white/20">
+      <nav className="container mx-auto flex items-center justify-between px-4 py-3 lg:px-8">
+        {/* Logo & App Name */}
+        <div
+          className="flex items-center gap-3 cursor-pointer group"
+          onClick={() => navigate("/")}
+        >
+          <div className="relative">
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary to-purple-600 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-200"></div>
+            <img
+              src={logo}
+              alt="Company Logo"
+              className="relative h-10 w-auto"
+            />
           </div>
-
-          {/* Main Navigation (hidden on mobile) */}
-          <div className="hidden lg:flex lg:items-center lg:gap-6">
-            <NavBar />
+          <div className="flex flex-col leading-none">
+            <span className="text-foreground font-bold text-xl tracking-tight group-hover:text-primary transition-colors">
+              NPDF Toolkit
+            </span>
           </div>
+        </div>
 
-          {/* Auth Buttons */}
+        {/* Main Navigation (hidden on mobile) */}
+        <div className="hidden lg:flex lg:items-center lg:gap-8">
+          <NavBar />
+        </div>
+
+        {/* Auth Buttons */}
+        <div className="flex items-center gap-4">
           {user ? (
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="relative rounded-full ring-2 ring-primary/20 hover:ring-primary/50 transition-all">
                   <Avatar>
                     <img
                       src={user?.picture}
                       alt="user"
-                      className="rounded-full w-9 "
+                      className="rounded-full w-9 h-9 object-cover"
                     />
+                    <AvatarFallback>U</AvatarFallback>
                   </Avatar>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="bg-sky-900 p-2  text-white w-40 mt-4 shadow-2xl"
-                  align="end"
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="bg-popover text-popover-foreground p-1 rounded-lg shadow-xl border border-border min-w-[150px] mt-2 animate-in fade-in zoom-in-95"
+                align="end"
+              >
+                <DropdownMenuItem
+                  className="cursor-pointer px-3 py-2 text-sm rounded-md hover:bg-accent hover:text-accent-foreground outline-none transition-colors"
+                  onClick={() => {
+                    googleLogout();
+                    localStorage.removeItem("googleUser");
+                    navigate("/");
+                  }}
                 >
-                  <DropdownMenuItem
-                    className="cursor-pointer"
-                    onClick={() => {
-                      googleLogout();
-                      localStorage.removeItem("googleUser");
-                      navigate("/");
-                    }}
-                  >
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
-            <div className="hidden lg:flex lg:items-center lg:gap-4">
-              <Link
-                to="/login"
-                className="px-3 py-1 font-semibold text-black rounded hover:text-sky-900 transition-colors"
-              >
-                Log in
+            <div className="hidden lg:flex lg:items-center lg:gap-3">
+              <Link to="/login">
+                <Button
+                  variant="ghost"
+                  className="text-foreground hover:text-primary hover:bg-primary/10"
+                >
+                  Log in
+                </Button>
               </Link>
-              <Link
-                to="#"
-                className="px-3 py-1 font-semibold text-white bg-sky-900 rounded hover:bg-sky-700 transition-colors"
-              >
-                Sign Up
+              <Link to="#">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20">
+                  Get Started
+                </Button>
               </Link>
             </div>
           )}
-        </nav>
-      </header>
-    </>
+        </div>
+      </nav>
+    </header>
   );
 };
 

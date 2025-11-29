@@ -1,11 +1,13 @@
 import React, { useRef } from "react";
 import Draggable from "react-draggable";
 
-const DraggableWrapper = ({ children, ...props }) => {
+const DraggableWrapper = ({ children, className, ...props }) => {
   const nodeRef = useRef(null);
   return (
     <Draggable nodeRef={nodeRef} {...props}>
-      <div ref={nodeRef}>{children}</div>
+      <div ref={nodeRef} className={className}>
+        {children}
+      </div>
     </Draggable>
   );
 };

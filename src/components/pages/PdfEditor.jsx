@@ -9,20 +9,17 @@ import {
   RefreshCcw,
   Signature,
   TextCursorInput,
-  Trash2,
-  Type,
 } from "lucide-react";
-import DraggableWrapper from "../helper/DraggableWrapper";
+import TextAnnotation from "./TextAnnotation";
 import { createTextAnnotation } from "@/utils/annotationHelpers";
 
 const PdfEditor = ({ pdfFile }) => {
   const [pdfUrl, setPdfUrl] = useState(null);
   const [annotations, setAnnotations] = useState([]);
   const [scale, setScale] = useState(1);
+  const [isAddingText, setIsAddingText] = useState(false);
 
   const pdfContainerRef = useRef(null);
-
-  const lastAnnotationRef = useRef(null);
 
   useEffect(() => {
     if (pdfFile) {
@@ -31,37 +28,71 @@ const PdfEditor = ({ pdfFile }) => {
     }
   }, [pdfFile]);
 
-  // ✅ Add text near the visible center of viewer
+  // ✅ Toggle Add Text mode
   const handleAddText = () => {
+    setIsAddingText((prev) => !prev);
+  };
+
+  // ✅ Handle click on PDF to add text
+  const handlePdfClick = (e) => {
+    if (!isAddingText) return;
+
     const rect = pdfContainerRef.current?.getBoundingClientRect();
-    const pdfWidth = rect?.width || 800;
-    const pdfHeight = rect?.height || 600;
+    if (!rect) return;
 
-    const scrollX = pdfContainerRef.current?.scrollLeft || 0;
-    const scrollY = pdfContainerRef.current?.scrollTop || 0;
+    // Adjust for scroll if needed, but since we are clicking relative to the container which might be scrolling,
+    // we need to be careful.
+    // The previous implementation used scrollLeft/scrollTop.
+    // If the container is the one scrolling, e.clientX is relative to viewport.
+    // rect.left is relative to viewport.
+    // <div className="relative ... overflow-auto ...">
+    //   <div style={{ scale }}> <PdfViewer ... /> {annotations...} </div>
+    // </div>
+    // The annotations are inside the scaled div.
+    // So if I click at 100px from left of container, and scale is 1.
+    // And scroll is 0.
+    // x should be 100.
 
-    const newAnnotation = createTextAnnotation(
-      "Edit me",
-      pdfWidth,
-      pdfHeight,
-      scrollX,
-      scrollY
-    );
+    // If scale is 2.
+    // Click at 100px.
+    // The internal coordinate should be 50 (because 50 * 2 = 100).
+
+    // If scroll is 50.
+    // Click at 100px from left of container.
+    // The point is actually at 150px from the start of the content.
+    // So (100 + 50) / scale.
+
+    const adjustedX =
+      (e.clientX - rect.left + (pdfContainerRef.current?.scrollLeft || 0)) /
+      scale;
+    const adjustedY =
+      (e.clientY - rect.top + (pdfContainerRef.current?.scrollTop || 0)) /
+      scale;
+
+    const newAnnotation = createTextAnnotation("Edit me", adjustedX, adjustedY);
     setAnnotations((prev) => [...prev, newAnnotation]);
+    setIsAddingText(false);
   };
 
-  // ✅ Update edited text
-  const handleTextChange = (id, newText) => {
+  // ✅ Update annotation (text, style, position)
+  const handleAnnotationChange = (id, updates) => {
     setAnnotations((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, text: newText } : a))
+      prev.map((a) => (a.id === id ? { ...a, ...updates } : a))
     );
   };
 
-  // ✅ Update drag positions
-  const handleDragStop = (id, x, y) => {
-    setAnnotations((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, x, y } : a))
-    );
+  // ✅ Duplicate annotation
+  const handleDuplicate = (id) => {
+    const annotation = annotations.find((a) => a.id === id);
+    if (annotation) {
+      const newAnnotation = {
+        ...annotation,
+        id: Date.now(),
+        x: annotation.x + 20,
+        y: annotation.y + 20,
+      };
+      setAnnotations((prev) => [...prev, newAnnotation]);
+    }
   };
 
   // ✅ Delete text annotation
@@ -69,71 +100,79 @@ const PdfEditor = ({ pdfFile }) => {
     setAnnotations((prev) => prev.filter((a) => a.id !== id));
   };
 
-  // ✅ Font size control
-  const changeFontSize = (id, delta) => {
-    setAnnotations((prev) =>
-      prev.map((a) =>
-        a.id === id ? { ...a, fontSize: Math.max(8, a.fontSize + delta) } : a
-      )
-    );
-  };
-
-  useEffect(() => {
-    if (lastAnnotationRef.current) {
-      const el = lastAnnotationRef.current.querySelector("[contenteditable]");
-      el?.focus();
-    }
-  }, [annotations]);
-
   return (
-    <div className="flex flex-col items-center w-full  min-h-screen">
+    <div className="flex flex-col items-center w-full min-h-screen bg-gray-50/50 pb-20">
       {/* Toolbar */}
-      <div className="sticky top-3 z-50 flex flex-wrap items-center justify-center gap-3 px-5 py-2 rounded-full backdrop-blur-md bg-white/70 shadow-lg border border-gray-300">
-        <button
-          className="flex items-center gap-1 px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-full text-sm cursor-pointer"
-          onClick={handleAddText}
-        >
-          <TextCursorInput size={16} /> Add Text
-        </button>
-        <button className="flex items-center gap-1 px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-full text-sm cursor-pointer">
-          <FileImage size={16} /> Add Image
-        </button>
-        <button className="flex items-center gap-1 px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-full text-sm cursor-pointer">
-          <Signature size={16} /> Add Sign
-        </button>
-        <button className="flex items-center gap-1 px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-full text-sm cursor-pointer">
-          <Link size={16} /> Add Link
-        </button>
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full glass shadow-2xl animate-in slide-in-from-bottom-10 duration-500">
+        <div className="flex items-center gap-1 pr-4 border-r border-gray-200/50">
+          <button
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              isAddingText
+                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                : "hover:bg-secondary text-foreground"
+            }`}
+            onClick={handleAddText}
+          >
+            <TextCursorInput size={18} />
+            <span>{isAddingText ? "Click PDF" : "Text"}</span>
+          </button>
 
-        <div className="border-l h-6 border-gray-400 mx-2"></div>
+          <button
+            className="p-2 rounded-full hover:bg-secondary text-foreground transition-colors"
+            title="Add Image"
+          >
+            <FileImage size={18} />
+          </button>
+          <button
+            className="p-2 rounded-full hover:bg-secondary text-foreground transition-colors"
+            title="Add Signature"
+          >
+            <Signature size={18} />
+          </button>
+          <button
+            className="p-2 rounded-full hover:bg-secondary text-foreground transition-colors"
+            title="Add Link"
+          >
+            <Link size={18} />
+          </button>
+        </div>
 
         {/* Zoom Controls */}
-        <button
-          onClick={() => setScale((s) => Math.max(0.5, s - 0.1))}
-          className="p-2 rounded-full bg-gray-100 hover:bg-gray-300"
-        >
-          <Minus size={14} />
-        </button>
-        <button
-          onClick={() => setScale((s) => Math.min(3, s + 0.1))}
-          className="p-2 rounded-full bg-gray-100 hover:bg-gray-300"
-        >
-          <Plus size={14} />
-        </button>
-        <button
-          onClick={() => setScale(1)}
-          className="p-2 rounded-full bg-gray-100 hover:bg-gray-300"
-        >
-          <RefreshCcw size={14} />
-        </button>
+        <div className="flex items-center gap-1 pl-2">
+          <button
+            onClick={() => setScale((s) => Math.max(0.5, s - 0.1))}
+            className="p-2 rounded-full hover:bg-secondary text-foreground transition-colors"
+          >
+            <Minus size={16} />
+          </button>
+          <span className="text-sm font-medium w-12 text-center select-none">
+            {Math.round(scale * 100)}%
+          </span>
+          <button
+            onClick={() => setScale((s) => Math.min(3, s + 0.1))}
+            className="p-2 rounded-full hover:bg-secondary text-foreground transition-colors"
+          >
+            <Plus size={16} />
+          </button>
+          <button
+            onClick={() => setScale(1)}
+            className="p-2 rounded-full hover:bg-secondary text-foreground transition-colors"
+            title="Reset Zoom"
+          >
+            <RefreshCcw size={14} />
+          </button>
+        </div>
       </div>
 
       {/* PDF Viewer */}
       <div
-        className="relative mt-4 border border-gray-400 shadow-lg bg-gray-50 overflow-auto rounded-lg"
+        ref={pdfContainerRef}
+        className="relative mt-4 shadow-2xl bg-white overflow-auto rounded-xl border border-border/50"
+        onClick={handlePdfClick}
         style={{
           width: "90vw",
           height: "85vh",
+          cursor: isAddingText ? "text" : "default",
         }}
       >
         {pdfUrl ? (
@@ -143,66 +182,22 @@ const PdfEditor = ({ pdfFile }) => {
               style={{ scale }}
             >
               <PdfViewer fileUrl={pdfUrl} />
-              {annotations.map((item, index) => (
-                <DraggableWrapper
+              {annotations.map((item) => (
+                <TextAnnotation
                   key={item.id}
-                  defaultPosition={{ x: item.x, y: item.y }}
-                  onStop={(e, data) => handleDragStop(item.id, data.x, data.y)}
-                >
-                  <div
-                    ref={
-                      index === annotations.length - 1
-                        ? lastAnnotationRef
-                        : null
-                    }
-                    className="absolute group "
-                    style={{
-                      fontSize: `${item.fontSize}px`,
-                      minWidth: "100px",
-                      padding: "4px",
-                      cursor: "move",
-                    }}
-                  >
-                    <div
-                      contentEditable
-                      suppressContentEditableWarning
-                      onBlur={(e) =>
-                        handleTextChange(item.id, e.target.innerText)
-                      }
-                      className="outline-none"
-                    >
-                      {item.text}
-                    </div>
-
-                    {/* Hover Toolbar for each annotation */}
-                    <div className="absolute -top-3 left-1 flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                      <button
-                        className="bg-red-500 text-white rounded px-1"
-                        onClick={() => handleDelete(item.id)}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                      <button
-                        className="bg-gray-700 text-white rounded px-1"
-                        onClick={() => changeFontSize(item.id, +2)}
-                      >
-                        <Plus size={14} />
-                      </button>
-                      <button
-                        className="bg-gray-700 text-white rounded px-1"
-                        onClick={() => changeFontSize(item.id, -2)}
-                      >
-                        <Minus size={14} />
-                      </button>
-                      <Type size={14} className="text-gray-500 ml-1" />
-                    </div>
-                  </div>
-                </DraggableWrapper>
+                  annotation={item}
+                  onChange={handleAnnotationChange}
+                  onDelete={handleDelete}
+                  onDuplicate={handleDuplicate}
+                  scale={scale}
+                />
               ))}
             </div>
           </>
         ) : (
-          <p className="text-gray-500 p-6">Upload a PDF to start editing.</p>
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+            <p className="text-lg">Upload a PDF to start editing.</p>
+          </div>
         )}
       </div>
     </div>
