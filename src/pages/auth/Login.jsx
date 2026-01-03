@@ -33,9 +33,9 @@ const Login = () => {
   };
   return (
     <>
-      <div className="flex flex-col lg:flex-row w-screen h-screen">
+      <div className="flex flex-col md:flex-row lg:flex-row w-screen h-screen ">
         {/* Login Form */}
-        <div className="flex flex-1 justify-center items-center bg-white">
+        <div className="flex flex-1 justify-center items-center bg-white p-2">
           <Card className="w-full max-w-md shadow-lg">
             <CardHeader>
               <CardTitle className="text-2xl font-bold">
@@ -102,7 +102,7 @@ const Login = () => {
         </div>
 
         {/* Video / Illustration */}
-        <div className="flex-1 w-full h-screen overflow-hidden">
+        <div className="flex-1 w-full h-screen overflow-hidden hidden md:block ">
           <video
             src={video}
             autoPlay

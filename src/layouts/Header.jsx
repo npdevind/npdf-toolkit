@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import NavBar from "./NavBar";
 import logo from "../assets/logo.png";
 import { Link, useNavigate } from "react-router-dom";
@@ -11,10 +11,21 @@ import {
 } from "@radix-ui/react-dropdown-menu";
 import { googleLogout } from "@react-oauth/google";
 import { Button } from "@/components/ui/button";
+import { MoonIcon, SunIcon } from "lucide-react";
 
 const Header = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("googleUser"));
+
+  useEffect(() => {
+    const theme = localStorage.getItem("theme");
+
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 w-full glass border-b border-white/20">
@@ -56,7 +67,6 @@ const Header = () => {
                       alt="user"
                       className="rounded-full w-9 h-9 object-cover"
                     />
-                    <AvatarFallback>U</AvatarFallback>
                   </Avatar>
                 </button>
               </DropdownMenuTrigger>
@@ -73,6 +83,27 @@ const Header = () => {
                   }}
                 >
                   Logout
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer px-3 py-2 text-sm rounded-md hover:bg-accent hover:text-accent-foreground outline-none transition-colors"
+                  onClick={() => {
+                    const isDark =
+                      document.documentElement.classList.contains("dark");
+
+                    if (isDark) {
+                      document.documentElement.classList.remove("dark");
+                      localStorage.setItem("theme", "light");
+                    } else {
+                      document.documentElement.classList.add("dark");
+                      localStorage.setItem("theme", "dark");
+                    }
+                  }}
+                >
+                  {document.documentElement.classList.contains("dark") ? (
+                    <SunIcon className="w-5 h-5" />
+                  ) : (
+                    <MoonIcon className="w-5 h-5" />
+                  )}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
